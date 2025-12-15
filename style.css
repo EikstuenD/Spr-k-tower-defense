@@ -1,144 +1,136 @@
 body {
-    font-family: 'Segoe UI', sans-serif;
-    background: #222;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #1a1a1a;
     color: white;
     text-align: center;
     margin: 0;
-    overflow: hidden; /* Hindrer scrolling */
+    overflow: hidden;
+    user-select: none; /* Hindrer markering av tekst */
 }
 
-/* Hovedmeny og Spillcontainer */
-#menu, #game-container {
-    display: none;
-}
+/* Skjul elementer som standard */
+#menu, #game-container { display: none; }
+#menu.active, #game-container.active { display: block; }
 
-#menu.active, #game-container.active {
-    display: block;
-}
-
-/* Meny styling */
+/* MENY */
 #menu {
     padding-top: 100px;
+    background: radial-gradient(circle, #2c3e50 0%, #000000 100%);
+    height: 100vh;
 }
-
 h1 {
-    font-size: 3em;
-    margin-bottom: 20px;
+    font-size: 4em;
     color: #f1c40f;
-    text-shadow: 2px 2px #000;
+    text-shadow: 4px 4px 0px #000;
+    margin-bottom: 10px;
 }
 
-/* Knapper */
+/* KNAPPER */
 button {
     padding: 15px 30px;
     font-size: 18px;
     cursor: pointer;
     border: none;
-    border-radius: 5px;
+    border-radius: 8px;
     margin: 10px;
-    transition: 0.2s;
     font-weight: bold;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.3);
+    transition: transform 0.1s, opacity 0.2s;
 }
+button:active { transform: translateY(4px); box-shadow: none; }
+button:hover { opacity: 0.9; }
+button:disabled { filter: grayscale(100%); opacity: 0.5; cursor: not-allowed; }
 
-button:hover {
-    opacity: 0.9;
-    transform: scale(1.05);
-}
+.btn-blue { background: #3498db; color: white; }
+.btn-red { background: #e74c3c; color: white; }
+.btn-start { background: #27ae60; color: white; font-size: 20px; padding: 10px 40px; }
 
-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
-}
-
-.btn-green { background: #27ae60; color: white; }
-.btn-blue { background: #2980b9; color: white; }
-.btn-red { background: #c0392b; color: white; }
-
-/* Spill UI */
+/* SPILL UI */
 #ui-bar {
-    background: #333;
-    padding: 15px;
+    background: #2c3e50;
+    padding: 10px 20px;
     display: flex;
-    justify-content: space-around;
-    align-items: center;
-    border-bottom: 2px solid #555;
-}
-
-#ui-bar span {
-    font-size: 20px;
-}
-
-/* Canvas (Spillbrettet) */
-canvas {
-    background: #444;
-    border: 2px solid #555;
-    cursor: crosshair;
-    margin-top: 10px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.5);
-}
-
-#controls {
-    padding: 10px;
-    background: #333;
-    margin-top: 5px;
-}
-
-.hint {
-    font-size: 12px;
-    color: #aaa;
-    margin-top: 5px;
-}
-
-/* Modal for Quiz */
-#quiz-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.85);
-    display: none;
     justify-content: center;
+    gap: 40px;
     align-items: center;
-    z-index: 100;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    position: relative;
+    z-index: 10;
+}
+.stat-box { font-size: 22px; font-weight: bold; }
+
+/* CANVAS */
+.canvas-wrapper {
+    display: flex;
+    justify-content: center;
+    background: #1a1a1a;
+    padding: 10px 0;
+}
+canvas {
+    background: #7ec850; /* Gressfarge */
+    border: 4px solid #5d4037;
+    border-radius: 4px;
+    box-shadow: 0 0 30px rgba(0,0,0,0.7);
+    cursor: crosshair;
 }
 
-#quiz-content {
-    background: #fff;
-    color: #333;
-    padding: 30px;
-    border-radius: 10px;
-    width: 400px;
-    box-shadow: 0 0 30px rgba(0,0,0,0.8);
-}
-
-.quiz-option {
-    display: block;
-    width: 100%;
-    margin: 10px 0;
+/* TOWER CONTROL PANEL */
+#controls {
+    background: #333;
     padding: 15px;
-    background: #eee;
+    border-top: 2px solid #444;
+}
+.tower-selection { display: flex; justify-content: center; gap: 20px; }
+.tower-card {
+    background: #444;
+    padding: 10px 20px;
+    border-radius: 10px;
     cursor: pointer;
-    border: 1px solid #ccc;
-    font-size: 16px;
-    color: #333;
+    border: 2px solid transparent;
+    transition: 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
+.tower-card:hover { background: #555; transform: scale(1.05); }
+.tower-card:active { border-color: #f1c40f; }
+.tower-card .icon { font-size: 30px; }
+.tower-card .name { font-size: 14px; font-weight: bold; margin-top: 5px; }
+.tower-card .cost { font-size: 12px; color: #f1c40f; }
 
-.quiz-option:hover {
-    background: #ddd;
-}
+.hint { color: #888; font-size: 14px; margin-top: 10px; font-style: italic; }
 
-/* Beskjeder på skjermen */
+/* BESKJEDER */
 #message-area {
     position: absolute;
-    top: 80px;
-    width: 100%;
+    top: 200px;
+    left: 50%;
+    transform: translateX(-50%);
     pointer-events: none;
-    font-size: 24px;
+    font-size: 40px;
     font-weight: bold;
-    text-shadow: 2px 2px 4px black;
-    color: #f1c40f;
-    z-index: 50;
-    height: 30px;
+    text-shadow: 2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+    color: #fff;
+    z-index: 100;
+    width: 100%;
 }
+
+/* QUIZ MODAL */
+#quiz-modal {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.9);
+    display: none; justify-content: center; align-items: center; z-index: 200;
+}
+#quiz-content {
+    background: white; color: #333; padding: 40px;
+    border-radius: 15px; width: 500px; text-align: center;
+    box-shadow: 0 0 50px rgba(255, 255, 255, 0.2);
+    border: 5px solid #3498db;
+}
+#quiz-question { margin-top: 0; font-size: 24px; margin-bottom: 20px;}
+.quiz-option {
+    background: #f0f0f0; border: 2px solid #ccc;
+    font-size: 20px; padding: 15px; margin: 10px 0;
+    width: 100%; text-align: left; transition: 0.2s;
+}
+.quiz-option:hover { background: #3498db; color: white; border-color: #2980b9; }
