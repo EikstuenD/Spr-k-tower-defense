@@ -1,4 +1,4 @@
-// --- DATA: ORDLISTER (Samme som før) ---
+// --- DATA: ORDLISTER ---
 const synonymList = [
     ["Glad", "Lykkelig"], ["Trist", "Lei"], ["Stor", "Svær"], ["Liten", "Små"], ["Rask", "Hurtig"],
     ["Treg", "Langsom"], ["Varm", "Het"], ["Kald", "Kjølig"], ["Vakker", "Pen"], ["Stygg", "Hesselig"],
@@ -31,26 +31,21 @@ let waveActive = false;
 let enemies = [];
 let towers = [];
 let projectiles = [];
-let floatingTexts = []; // NY: For skadetall
-let frameCount = 0;
+let floatingTexts = [];
 let selectedTower = "basic";
 let pendingTowerLocation = null;
 
-// NY: En mer kronglete vei (Snake pattern)
+// Enklere slangevei (Sikrer at den holder seg innenfor 800x600)
 const path = [
-    {x: 0, y: 100},
-    {x: 700, y: 100},
-    {x: 700, y: 250},
-    {x: 100, y: 250},
-    {x: 100, y: 400},
-    {x: 700, y: 400},
-    {x: 700, y: 550},
-    {x: 800, y: 550}
+    {x: 0, y: 150},
+    {x: 700, y: 150},
+    {x: 700, y: 300},
+    {x: 100, y: 300},
+    {x: 100, y: 450},
+    {x: 800, y: 450}
 ];
 
-// KONFIGURASJON
 const TOWER_COSTS = { basic: 50, sniper: 120, ice: 100 };
-// Oppdaterte stats med emojis
 const TOWER_STATS = {
     basic: { range: 160, damage: 15, rate: 35, icon: "🏹", name: "Bueskytter", projectileColor: "brown" },
     sniper: { range: 400, damage: 80, rate: 120, icon: "💣", name: "Kanon", projectileColor: "black" },
@@ -59,28 +54,17 @@ const TOWER_STATS = {
 
 // --- KLASSER ---
 
-// NY KLASSE: Flytende tekst (skadetall)
 class FloatingText {
     constructor(x, y, text, color, size = 20) {
-        this.x = x;
-        this.y = y;
-        this.text = text;
-        this.color = color;
-        this.size = size;
-        this.life = 1.0; // Opacity
-        this.vy = -1; // Fart oppover
+        this.x = x; this.y = y; this.text = text;
+        this.color = color; this.size = size;
+        this.life = 1.0; this.vy = -1;
     }
-    update() {
-        this.y += this.vy;
-        this.life -= 0.02; // Fade out speed
-    }
+    update() { this.y += this.vy; this.life -= 0.02; }
     draw() {
         ctx.globalAlpha = Math.max(0, this.life);
         ctx.fillStyle = this.color;
         ctx.font = `bold ${this.size}px Arial`;
-        ctx.strokeStyle = "black";
-        ctx.lineWidth = 3;
-        ctx.strokeText(this.text, this.x, this.y);
         ctx.fillText(this.text, this.x, this.y);
         ctx.globalAlpha = 1.0;
     }
@@ -93,16 +77,10 @@ class Enemy {
         this.x = path[0].x;
         this.y = path[0].y;
         
-        // Setup visuals og stats basert på type
-        if (type === 'fast') { 
-            this.speed = 3.5; this.hp = 30; this.icon = "⚡"; this.reward = 15;
-        } else if (type === 'tank') { 
-            this.speed = 0.8; this.hp = 200; this.icon = "👹"; this.reward = 30;
-        } else if (type === 'stealth') { 
-            this.speed = 2.2; this.hp = 50; this.icon = "👻"; this.reward = 20; this.stealthTimer = 0; 
-        } else { 
-            this.speed = 1.8; this.hp = 60; this.icon = "👾"; this.reward = 10;
-        }
+        if (type === 'fast') { this.speed = 3.5; this.hp = 30; this.icon = "⚡"; this.reward = 15; }
+        else if (type === 'tank') { this.speed = 0.8; this.hp = 200; this.icon = "👹"; this.reward = 30; }
+        else if (type === 'stealth') { this.speed = 2.2; this.hp = 50; this.icon = "👻"; this.reward = 20; this.stealthTimer = 0; }
+        else { this.speed = 1.8; this.hp = 60; this.icon = "👾"; this.reward = 10; }
         
         this.maxHp = this.hp;
         this.slowed = 0;
@@ -110,30 +88,17 @@ class Enemy {
     }
 
     update() {
-        // Stealth logikk
         if (this.type === 'stealth') {
             this.stealthTimer++;
-            if (this.stealthTimer % 200 < 100) {
-                this.invisible = true;
-            } else {
-                this.invisible = false;
-            }
+            this.invisible = (this.stealthTimer % 200 < 100);
         }
 
-        // Slow logikk
         let currentSpeed = this.speed;
-        if (this.slowed > 0) {
-            currentSpeed *= 0.5;
-            this.slowed--;
-            // Vis is-effekt
-            if(Math.random() < 0.1) floatingTexts.push(new FloatingText(this.x, this.y, "❄️", "cyan", 15));
-        }
+        if (this.slowed > 0) { currentSpeed *= 0.5; this.slowed--; }
 
-        // Bevegelse
         const target = path[this.pathIndex + 1];
         if (!target) {
-            this.hp = 0; 
-            lives--;
+            this.hp = 0; lives--;
             floatingTexts.push(new FloatingText(this.x, this.y, "-1 LIV", "red", 30));
             updateUI();
             return;
@@ -154,57 +119,40 @@ class Enemy {
     }
 
     draw() {
-        // Tegn monster (Emoji)
         ctx.font = "30px Arial";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        
         if (this.invisible) ctx.globalAlpha = 0.3;
         ctx.fillText(this.icon, this.x, this.y);
         ctx.globalAlpha = 1.0;
         
-        // Helsebar (Forbedret)
-        const barWidth = 40;
-        const barHeight = 6;
+        // Helsebar
         const hpPercent = this.hp / this.maxHp;
-        
-        ctx.fillStyle = "black";
-        ctx.fillRect(this.x - barWidth/2, this.y - 25, barWidth, barHeight);
-        
-        // Farge basert på HP (Grønn -> Gul -> Rød)
-        let hpColor = "#2ecc71";
-        if (hpPercent < 0.6) hpColor = "#f1c40f";
-        if (hpPercent < 0.3) hpColor = "#e74c3c";
-        
-        ctx.fillStyle = hpColor;
-        ctx.fillRect(this.x - barWidth/2 + 1, this.y - 24, (barWidth-2) * hpPercent, barHeight-2);
+        ctx.fillStyle = "red";
+        ctx.fillRect(this.x - 20, this.y - 25, 40, 6);
+        ctx.fillStyle = "#2ecc71";
+        ctx.fillRect(this.x - 20, this.y - 25, 40 * hpPercent, 6);
     }
 }
 
 class Tower {
     constructor(x, y, type) {
-        this.x = x;
-        this.y = y;
-        this.type = type;
+        this.x = x; this.y = y; this.type = type;
         this.stats = { ...TOWER_STATS[type] };
-        this.cooldown = 0;
-        this.level = 1;
+        this.cooldown = 0; this.level = 1;
     }
 
     update() {
         if (this.cooldown > 0) this.cooldown--;
-
         let target = null;
         let minDesc = Infinity;
 
         for (let e of enemies) {
             if (e.invisible) continue;
             const dist = Math.hypot(e.x - this.x, e.y - this.y);
-            if (dist <= this.stats.range) {
-                if (dist < minDesc) {
-                    minDesc = dist;
-                    target = e;
-                }
+            if (dist <= this.stats.range && dist < minDesc) {
+                minDesc = dist;
+                target = e;
             }
         }
 
@@ -216,37 +164,27 @@ class Tower {
 
     shoot(target) {
         projectiles.push({
-            x: this.x, y: this.y - 10,
-            target: target,
-            damage: this.stats.damage,
-            effect: this.stats.effect,
-            speed: 12,
-            color: this.stats.projectileColor
+            x: this.x, y: this.y - 10, target: target,
+            damage: this.stats.damage, effect: this.stats.effect,
+            speed: 12, color: this.stats.projectileColor
         });
     }
 
     draw() {
-        // Tegn rekkevidde hvis musa er i nærheten (enkel sjekk kan legges til senere)
-        
-        // Tegn base
-        ctx.fillStyle = "#555";
+        // Sirkel bakgrunn
+        ctx.fillStyle = "#444";
         ctx.beginPath();
-        ctx.ellipse(this.x, this.y+10, 15, 8, 0, 0, Math.PI*2);
+        ctx.arc(this.x, this.y, 20, 0, Math.PI*2);
         ctx.fill();
 
-        // Tegn tårn-ikon
         ctx.font = "35px Arial";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillText(this.stats.icon, this.x, this.y);
 
-        // Level
         ctx.fillStyle = "white";
-        ctx.font = "bold 12px Arial";
-        ctx.strokeStyle = "black";
-        ctx.lineWidth = 2;
-        ctx.strokeText("⭐" + this.level, this.x, this.y - 20);
-        ctx.fillText("⭐" + this.level, this.x, this.y - 20);
+        ctx.font = "12px Arial";
+        ctx.fillText("⭐" + this.level, this.x, this.y - 25);
     }
 
     upgrade() {
@@ -263,24 +201,22 @@ class Tower {
     }
 }
 
-// --- LOGIKK OG LOOP ---
+// --- HOVEDFUNKSJONER ---
 
 function startGame(mode) {
     gameMode = mode;
     document.getElementById("menu").classList.remove("active");
     document.getElementById("game-container").classList.add("active");
+    
     canvas = document.getElementById("gameCanvas");
     ctx = canvas.getContext("2d");
+    
+    // Fjern eventuelle gamle lyttere og legg til ny
+    canvas.removeEventListener('mousedown', handleCanvasClick);
     canvas.addEventListener('mousedown', handleCanvasClick);
 
-    // Reset
-    gold = 350; // Litt mer startgull
-    lives = 20;
-    wave = 0;
-    enemies = [];
-    towers = [];
-    projectiles = [];
-    floatingTexts = [];
+    gold = 350; lives = 20; wave = 0;
+    enemies = []; towers = []; projectiles = []; floatingTexts = [];
     waveActive = false;
     
     updateUI();
@@ -296,39 +232,51 @@ function gameLoop() {
         updateEnemies();
         updateTowers();
         updateProjectiles();
-        updateFloatingText();
         
+        // Flytende tekst
+        for (let i = floatingTexts.length - 1; i >= 0; i--) {
+            floatingTexts[i].update();
+            floatingTexts[i].draw();
+            if (floatingTexts[i].life <= 0) floatingTexts.splice(i, 1);
+        }
+
         drawUIOverlay();
-        frameCount++;
     }
     requestAnimationFrame(gameLoop);
 }
 
-// Oppdatert drawMap for å tegne vei
 function drawMap() {
-    // Tegn selve veien
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
+    // Tegn veien
+    ctx.lineCap = "round"; ctx.lineJoin = "round";
     
-    // Kantlinje på veien
-    ctx.strokeStyle = "#5d4037"; // Mørk brun
-    ctx.lineWidth = 60;
+    // Kantlinje
+    ctx.strokeStyle = "#5d4037"; ctx.lineWidth = 60;
     ctx.beginPath();
     ctx.moveTo(path[0].x, path[0].y);
     for (let p of path) ctx.lineTo(p.x, p.y);
     ctx.stroke();
 
-    // Vei-fyll
-    ctx.strokeStyle = "#d7ccc8"; // Sandfarge
-    ctx.lineWidth = 50;
+    // Innside
+    ctx.strokeStyle = "#d7ccc8"; ctx.lineWidth = 50;
     ctx.beginPath();
     ctx.moveTo(path[0].x, path[0].y);
     for (let p of path) ctx.lineTo(p.x, p.y);
     ctx.stroke();
 
-    // Tegn objekter
     enemies.forEach(e => e.draw());
     towers.forEach(t => t.draw());
+}
+
+function updateEnemies() {
+    for (let i = enemies.length - 1; i >= 0; i--) {
+        enemies[i].update();
+        if (enemies[i].hp <= 0) {
+            gold += enemies[i].reward;
+            floatingTexts.push(new FloatingText(enemies[i].x, enemies[i].y, `+${enemies[i].reward}g`, "#f1c40f"));
+            enemies.splice(i, 1);
+            updateUI();
+        }
+    }
 }
 
 function updateProjectiles() {
@@ -341,56 +289,21 @@ function updateProjectiles() {
         let dist = Math.hypot(dx, dy);
         
         if (dist < p.speed) {
-            // TREFF
             t.hp -= p.damage;
-            
-            // Lag skadetall
-            floatingTexts.push(new FloatingText(t.x, t.y - 20, p.damage, "white"));
-
-            if (p.effect === 'slow') {
-                t.slowed = 90; // 1.5 sekunder
-                floatingTexts.push(new FloatingText(t.x, t.y, "SLOW", "cyan", 15));
-            }
-
+            floatingTexts.push(new FloatingText(t.x, t.y - 20, p.damage, "white", 15));
+            if (p.effect === 'slow') t.slowed = 90;
             projectiles.splice(i, 1);
         } else {
             p.x += (dx / dist) * p.speed;
             p.y += (dy / dist) * p.speed;
             
-            // Tegn prosjektil
             ctx.fillStyle = p.color;
             ctx.beginPath();
-            ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+            ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
             ctx.fill();
         }
     }
 }
-
-function updateFloatingText() {
-    for (let i = floatingTexts.length - 1; i >= 0; i--) {
-        floatingTexts[i].update();
-        floatingTexts[i].draw();
-        if (floatingTexts[i].life <= 0) floatingTexts.splice(i, 1);
-    }
-}
-
-function updateEnemies() {
-    for (let i = enemies.length - 1; i >= 0; i--) {
-        enemies[i].update();
-        if (enemies[i].hp <= 0) {
-            gold += enemies[i].reward;
-            
-            // Døds-effekt tekst
-            floatingTexts.push(new FloatingText(enemies[i].x, enemies[i].y, `+${enemies[i].reward}g`, "#f1c40f", 25));
-            
-            enemies.splice(i, 1);
-            updateUI();
-        }
-    }
-}
-
-// --- RESTERENDE FUNKSJONER (Bølger, Klikk, Quiz) ---
-// Disse er ganske like som før, men jeg inkluderer dem for at filen skal være komplett.
 
 function startNextWave() {
     if (waveActive) return;
@@ -398,7 +311,7 @@ function startNextWave() {
     waveActive = true;
     updateUI();
     
-    let count = 6 + Math.floor(wave * 1.5);
+    let count = 5 + wave;
     let spawnCounter = 0;
     
     let spawner = setInterval(() => {
@@ -406,9 +319,7 @@ function startNextWave() {
         
         let type = 'normal';
         let r = Math.random();
-        
-        // Vanskeligere bølger
-        if (wave > 1 && r < 0.4) type = 'fast';
+        if (wave > 1 && r < 0.3) type = 'fast';
         if (wave > 3 && r < 0.2) type = 'tank';
         if (wave > 5 && r < 0.2) type = 'stealth';
         
@@ -417,8 +328,9 @@ function startNextWave() {
         
         if (spawnCounter >= count) {
             clearInterval(spawner);
+            // Sjekk om bølgen er ferdig
             let checkEnd = setInterval(() => {
-                if (enemies.length === 0) {
+                if (enemies.length === 0 && waveActive) {
                     waveActive = false;
                     showMessage(`Bølge ${wave} fullført!`);
                     clearInterval(checkEnd);
@@ -427,19 +339,26 @@ function startNextWave() {
                 }
             }, 1000);
         }
-    }, 1200); // Litt lengre tid mellom monstre
+    }, 1200);
     
     document.getElementById("start-wave-btn").disabled = true;
 }
 
-function handleCanvasClick(e) {
+// --- KLIKK OG BYGGING ---
+
+// Bedre funksjon for å finne mus-posisjon
+function getMousePos(evt) {
     const rect = canvas.getBoundingClientRect();
-    // Skaler mus-koordinatene korrekt hvis CSS endrer størrelsen
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    
-    const x = (e.clientX - rect.left) * scaleX;
-    const y = (e.clientY - rect.top) * scaleY;
+    return {
+        x: (evt.clientX - rect.left) / (rect.right - rect.left) * canvas.width,
+        y: (evt.clientY - rect.top) / (rect.bottom - rect.top) * canvas.height
+    };
+}
+
+function handleCanvasClick(e) {
+    const pos = getMousePos(e);
+    const x = pos.x;
+    const y = pos.y;
 
     // Sjekk oppgradering
     for (let t of towers) {
@@ -449,20 +368,15 @@ function handleCanvasClick(e) {
         }
     }
 
+    // Bygge-logikk
     if (!waveActive) {
         showMessage("Start bølgen for å bygge!");
         return;
     }
+
     if (gold < TOWER_COSTS[selectedTower]) {
         showMessage("Ikke nok gull!");
         return;
-    }
-
-    // Ikke bygg oppå veien
-    if (ctx.isPointInStroke(new Path2D(), x, y)) { 
-        // Enkel sjekk (dette er litt vanskeligere med Snake path, 
-        // så vi forenkler ved å bare tillate bygging overalt foreløpig, 
-        // men du kan legge til sjekk mot path-koordinater her om du vil)
     }
 
     pendingTowerLocation = { x, y };
@@ -471,11 +385,16 @@ function handleCanvasClick(e) {
 
 function selectTowerType(type) {
     selectedTower = type;
+    
+    // Visuell markering av valgt knapp
+    document.querySelectorAll('.tower-card').forEach(el => el.classList.remove('selected'));
+    document.getElementById('btn-' + type).classList.add('selected');
+    
     showMessage(`Valgt: ${TOWER_STATS[type].name}`);
 }
 
 function startQuiz() {
-    gameState = "quiz"; // Pauser input, men loopen går
+    gameState = "quiz";
     const list = gameMode === 'synonym' ? synonymList : antonymList;
     const pair = list[Math.floor(Math.random() * list.length)];
     const questionWord = pair[0];
@@ -507,7 +426,7 @@ function startQuiz() {
 
 function answerQuiz(isCorrect) {
     document.getElementById("quiz-modal").style.display = "none";
-    gameState = "playing";
+    gameState = "playing"; // Sørg for at loopen fortsetter
     
     if (isCorrect) {
         gold -= TOWER_COSTS[selectedTower];
@@ -523,7 +442,7 @@ function showMessage(msg) {
     const el = document.getElementById("message-area");
     el.innerText = msg;
     el.style.opacity = 1;
-    setTimeout(() => { el.innerText = ""; }, 2500);
+    setTimeout(() => { el.innerText = ""; }, 2000);
 }
 
 function updateUI() {
