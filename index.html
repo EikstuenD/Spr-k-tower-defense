@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ordkrig: Tower Defense</title>
+    <!-- Kobler til CSS-filen -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- MENY -->
+    <div id="menu" class="active">
+        <h1>ORDKRIG TD</h1>
+        <p>Velg modus for å starte:</p>
+        <button class="btn-blue" onclick="startGame('synonym')">Synonymer</button>
+        <button class="btn-red" onclick="startGame('antonym')">Antonymer</button>
+    </div>
+
+    <!-- SPILL -->
+    <div id="game-container">
+        <div id="ui-bar">
+            <span>Gull: <b id="gold-display">100</b></span>
+            <span>Liv: <b id="lives-display">20</b></span>
+            <span>Bølge: <b id="wave-display">0</b></span>
+            <button class="btn-green" id="start-wave-btn" onclick="startNextWave()">Start Bølge</button>
+        </div>
+        
+        <div id="message-area"></div>
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <div id="controls">
+            <p>Velg Tårn (Klikk på kartet for å bygge):</p>
+            <div class="tower-buttons">
+                <button class="btn-blue" onclick="selectTowerType('basic')">Bueskytter (50g)</button>
+                <button class="btn-red" onclick="selectTowerType('sniper')">Kanon (120g)</button>
+                <button class="btn-green" onclick="selectTowerType('ice')">Frost (100g)</button>
+            </div>
+            <p class="hint">NB: Du kan kun bygge mens fiender angriper!</p>
+        </div>
+    </div>
+
+    <!-- QUIZ MODAL -->
+    <div id="quiz-modal">
+        <div id="quiz-content">
+            <h2 id="quiz-question">Spørsmål</h2>
+            <div id="quiz-options"></div>
+        </div>
+    </div>
+
+    <!-- Kobler til JavaScript-filen -->
+    <script src="script.js"></script>
+</body>
+</html>
