@@ -3,40 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ordkrig: Tower Defense</title>
-    <!-- Kobler til CSS-filen -->
+    <title>Ordkrig TD: Deluxe</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <!-- MENY -->
     <div id="menu" class="active">
-        <h1>ORDKRIG TD</h1>
-        <p>Velg modus for å starte:</p>
-        <button class="btn-blue" onclick="startGame('synonym')">Synonymer</button>
-        <button class="btn-red" onclick="startGame('antonym')">Antonymer</button>
+        <h1>⚔️ ORDKRIG TD 🛡️</h1>
+        <p>Forsvar kongeriket med grammatikk!</p>
+        <div class="menu-buttons">
+            <button class="btn-blue" onclick="startGame('synonym')">📚 Synonymer</button>
+            <button class="btn-red" onclick="startGame('antonym')">🔄 Antonymer</button>
+        </div>
     </div>
 
     <!-- SPILL -->
     <div id="game-container">
         <div id="ui-bar">
-            <span>Gull: <b id="gold-display">100</b></span>
-            <span>Liv: <b id="lives-display">20</b></span>
-            <span>Bølge: <b id="wave-display">0</b></span>
-            <button class="btn-green" id="start-wave-btn" onclick="startNextWave()">Start Bølge</button>
+            <div class="stat-box">💰 <span id="gold-display">100</span></div>
+            <div class="stat-box">❤️ <span id="lives-display">20</span></div>
+            <div class="stat-box">🌊 Bølge: <span id="wave-display">0</span></div>
+            <button class="btn-start" id="start-wave-btn" onclick="startNextWave()">⚔️ START BØLGE</button>
         </div>
         
         <div id="message-area"></div>
-        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <!-- Canvas wrapper for å sentrere -->
+        <div class="canvas-wrapper">
+            <canvas id="gameCanvas" width="800" height="600"></canvas>
+        </div>
         
         <div id="controls">
-            <p>Velg Tårn (Klikk på kartet for å bygge):</p>
-            <div class="tower-buttons">
-                <button class="btn-blue" onclick="selectTowerType('basic')">Bueskytter (50g)</button>
-                <button class="btn-red" onclick="selectTowerType('sniper')">Kanon (120g)</button>
-                <button class="btn-green" onclick="selectTowerType('ice')">Frost (100g)</button>
+            <div class="tower-selection">
+                <div class="tower-card" onclick="selectTowerType('basic')">
+                    <span class="icon">🏹</span>
+                    <span class="name">Bueskytter</span>
+                    <span class="cost">50g</span>
+                </div>
+                <div class="tower-card" onclick="selectTowerType('sniper')">
+                    <span class="icon">💣</span>
+                    <span class="name">Kanon</span>
+                    <span class="cost">120g</span>
+                </div>
+                <div class="tower-card" onclick="selectTowerType('ice')">
+                    <span class="icon">❄️</span>
+                    <span class="name">Frost</span>
+                    <span class="cost">100g</span>
+                </div>
             </div>
-            <p class="hint">NB: Du kan kun bygge mens fiender angriper!</p>
+            <p class="hint">Tips: Klikk på kartet mens fiender angriper for å bygge!</p>
         </div>
     </div>
 
@@ -48,7 +64,6 @@
         </div>
     </div>
 
-    <!-- Kobler til JavaScript-filen -->
     <script src="script.js"></script>
 </body>
 </html>
