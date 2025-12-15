@@ -4,11 +4,10 @@ body {
     color: white;
     text-align: center;
     margin: 0;
-    overflow: hidden;
-    user-select: none; /* Hindrer markering av tekst */
+    overflow: hidden; /* Hindrer scrollbars */
+    user-select: none;
 }
 
-/* Skjul elementer som standard */
 #menu, #game-container { display: none; }
 #menu.active, #game-container.active { display: block; }
 
@@ -45,7 +44,7 @@ button:disabled { filter: grayscale(100%); opacity: 0.5; cursor: not-allowed; }
 .btn-red { background: #e74c3c; color: white; }
 .btn-start { background: #27ae60; color: white; font-size: 20px; padding: 10px 40px; }
 
-/* SPILL UI */
+/* UI BAR */
 #ui-bar {
     background: #2c3e50;
     padding: 10px 20px;
@@ -59,7 +58,7 @@ button:disabled { filter: grayscale(100%); opacity: 0.5; cursor: not-allowed; }
 }
 .stat-box { font-size: 22px; font-weight: bold; }
 
-/* CANVAS */
+/* SPILLBRETT */
 .canvas-wrapper {
     display: flex;
     justify-content: center;
@@ -67,14 +66,16 @@ button:disabled { filter: grayscale(100%); opacity: 0.5; cursor: not-allowed; }
     padding: 10px 0;
 }
 canvas {
-    background: #7ec850; /* Gressfarge */
+    background: #7ec850;
     border: 4px solid #5d4037;
     border-radius: 4px;
     box-shadow: 0 0 30px rgba(0,0,0,0.7);
     cursor: crosshair;
+    max-width: 100%;
+    max-height: 70vh; /* Sikrer at den passer på mindre skjermer */
 }
 
-/* TOWER CONTROL PANEL */
+/* TÅRN VALG */
 #controls {
     background: #333;
     padding: 15px;
@@ -86,18 +87,26 @@ canvas {
     padding: 10px 20px;
     border-radius: 10px;
     cursor: pointer;
-    border: 2px solid transparent;
+    border: 3px solid transparent; /* Plass til border */
     transition: 0.2s;
     display: flex;
     flex-direction: column;
     align-items: center;
+    width: 100px;
 }
 .tower-card:hover { background: #555; transform: scale(1.05); }
-.tower-card:active { border-color: #f1c40f; }
+
+/* NY: Klasse for valgt tårn */
+.tower-card.selected {
+    border-color: #f1c40f;
+    background: #555;
+    box-shadow: 0 0 15px rgba(241, 196, 15, 0.4);
+    transform: scale(1.1);
+}
+
 .tower-card .icon { font-size: 30px; }
 .tower-card .name { font-size: 14px; font-weight: bold; margin-top: 5px; }
 .tower-card .cost { font-size: 12px; color: #f1c40f; }
-
 .hint { color: #888; font-size: 14px; margin-top: 10px; font-style: italic; }
 
 /* BESKJEDER */
@@ -109,10 +118,11 @@ canvas {
     pointer-events: none;
     font-size: 40px;
     font-weight: bold;
-    text-shadow: 2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+    text-shadow: 2px 2px 0 #000, -1px -1px 0 #000;
     color: #fff;
     z-index: 100;
     width: 100%;
+    transition: opacity 0.5s;
 }
 
 /* QUIZ MODAL */
@@ -131,6 +141,6 @@ canvas {
 .quiz-option {
     background: #f0f0f0; border: 2px solid #ccc;
     font-size: 20px; padding: 15px; margin: 10px 0;
-    width: 100%; text-align: left; transition: 0.2s;
+    width: 100%; text-align: left; transition: 0.2s; cursor: pointer;
 }
 .quiz-option:hover { background: #3498db; color: white; border-color: #2980b9; }
